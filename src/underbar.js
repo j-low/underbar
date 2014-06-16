@@ -169,20 +169,34 @@ var _ = {};
   // Calls the method named by methodName on each value in the list.
   // Note: you will read to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
-	var results = [];
-	//var isFunction = isFunc(functionOrKey);	
 	
 	//check to determine if functionOrKey is function
-	//var isFunc = function(functionToCheck) {
-	//	var getType = {};
-	//	return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
-	//};
+	var isFunc = function(functionToCheck) {
+	  var getType = {};
+	  return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+	};
 	
+	var isFunction = isFunc(functionOrKey);	
+	var results = [];
+	
+	if (isFunction) {
+      for (var index = 0; index < collection.length; index++) {
+	    results.push(functionOrKey.apply(collection[index], args));
+	  }	
+	  //return _.map(collection, function(input) {
+		//functionOrKey.apply(input, args);
+	  //});
+	} else {
 	for (var index = 0; index < collection.length; index++) {
-		results.push(functionOrKey.apply(collection[index], args));
-	}
-	
-	
+	  	    var pushResult = function(arr, input) {
+				  arr.push((input[functionOrKey]).apply(input, args));
+				}
+			pushResult(results, collection[index]);	
+	  }	
+	  //return _.map(collection, function(input) {
+		//(input[functionOrKey]).apply(input, args);
+	  //});
+	}	
 	return results;
   };
 
