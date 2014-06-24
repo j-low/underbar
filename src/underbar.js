@@ -394,6 +394,19 @@ var _ = {};
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+	var memo = {};
+    
+	var cacheCheck = function(iter) { //cacheCheck lol
+	  var value;
+	  if(iter in memo) {
+	    value = memo[iter];  
+	  } else {
+	    value = func.apply(this, arguments);
+	    memo[iter] = value;
+	  }
+	  return value;
+	}
+	return cacheCheck;
   };
 
   // Delays a function for the given number of milliseconds, and then calls
