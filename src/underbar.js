@@ -75,10 +75,10 @@ var _ = {};
     var result = -1;
 
     _.each(array, function(item, index) {
-      if (item === target && result === -1) {
-        result = index;
-      }
-    });
+    if (item === target && result === -1) {
+      result = index;
+    }
+  });
 
     return result;
   };
@@ -134,7 +134,9 @@ var _ = {};
 	}
 	
 	if(iterator !== undefined) {
-		iterator(newArr);
+	  _.each(newArr, iterator);
+	} else {
+	  _.each(newArr, _.identity);
 	}
 	
 	return newArr;
@@ -183,9 +185,6 @@ var _ = {};
       for (var index = 0; index < collection.length; index++) {
 	    results.push(functionOrKey.apply(collection[index], args));
 	  }	
-	  //return _.map(collection, function(input) {
-		//functionOrKey.apply(input, args);
-	  //});
 	} else {
 	for (var index = 0; index < collection.length; index++) {
 	  	    var pushResult = function(arr, input) {
@@ -193,9 +192,6 @@ var _ = {};
 				}
 			pushResult(results, collection[index]);	
 	  }	
-	  //return _.map(collection, function(input) {
-		//(input[functionOrKey]).apply(input, args);
-	  //});
 	}	
 	return results;
   };
@@ -216,30 +212,104 @@ var _ = {};
   //     return total + number;
   //   }, 0); // should be 6
   _.reduce = function(collection, iterator, accumulator) {
+    if(accumulator === undefined) {
+      accumulator = collection[0];
+    }
+    
+	var total = null;
+	
+	_.each(collection, function(arguments) { 
+      total = iterator(total, arguments);
+      return total;
+    });
+    
+	total += accumulator;
+	
+	return total;
   };
 
   // Determine if the array or object contains a given value (using `===`).
   _.contains = function(collection, target) {
     // TIP: Many iteration problems can be most easily expressed in
     // terms of reduce(). Here's a freebie to demonstrate!
-    return _.reduce(collection, function(wasFound, item) {
+    if(_.reduce(collection, function(wasFound, item) {
       if (wasFound) {
         return true;
       }
       return item === target;
-    }, false);
+    }, false) === 0) {
+	  return false;
+	} else {
+	  return true;
+	}
   };
 
 
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
-    // TIP: Try re-using reduce() here.
+    var transArr = [];
+    var boolArr = [];
+    var total = null;
+  
+    if(!iterator) {
+      _.each(collection, function(num) {
+        transArr.push(_.identity(num));      
+      });
+    } else {
+      _.each(collection, function(num) {
+        transArr.push(iterator(num));
+      });
+    }
+    
+    _.each(transArr, function(num) {
+      if(num) { 
+        boolArr.push(true); 
+      } else {
+        boolArr.push(false);
+      }
+    });
+    
+    total = _.reduce(boolArr, function(a,b) { return a + b }, null);
+  
+    if(total/collection.length === 1 || collection.length === 0) { 
+      return true; 
+    } else {
+      return false;
+    }  
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
-    // TIP: There's a very clever way to re-use every() here.
+    var transArr = [];
+    var boolArr = [];
+    var total = null;
+  
+    if(!iterator) {
+      _.each(collection, function(num) {
+        transArr.push(_.identity(num));      
+      });
+    } else {
+      _.each(collection, function(num) {
+        transArr.push(iterator(num));
+      });
+    }
+    
+    _.each(transArr, function(num) {
+      if(num) { 
+        boolArr.push(true); 
+      } else {
+        boolArr.push(false);
+      }
+    });
+    
+    total = _.reduce(boolArr, function(a,b) { return a + b }, null);
+  
+    if(total/collection.length !== 0 && collection.length > 0) { 
+      return true; 
+    } else {
+      return false;
+    }  
   };
 
 
@@ -262,11 +332,27 @@ var _ = {};
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    //get additional 'extension' arguments and add each to 'obj'
+    _.each(Array.prototype.slice.call(arguments, 1), function(extension) {
+		for (var key in extension) {
+			obj[key] = extension[key];
+		}
+	});
+	return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    //get additional 'extension' arguments and add each to 'obj'
+    _.each(Array.prototype.slice.call(arguments, 1), function(extension) {
+		for (var key in extension) {
+			if(!(_.contains(Object.getOwnPropertyNames(obj), key))) {
+			obj[key] = extension[key];
+			}
+		}
+	});
+	return obj;
   };
 
 
@@ -317,6 +403,8 @@ var _ = {};
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+	return setTimeout(function() { func.apply(this, args) }, wait);
   };
 
 
@@ -331,6 +419,19 @@ var _ = {};
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var newArr = [];
+	var finalArr = [];
+	
+	_.each(array, function(num) {
+	  newArr.push({'orig': num, 'sorter': Math.random()});
+	});
+	
+	newArr.sort(function(a, b) { return a.sorter - b.sorter });
+	
+	_.each(newArr, function(num) {
+		finalArr.push(num.orig);
+	});
+	return finalArr;
   };
 
 
